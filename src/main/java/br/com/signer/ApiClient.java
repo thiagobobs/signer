@@ -14,7 +14,7 @@ public class ApiClient implements Serializable {
 		FILES = new LinkedList<>();
 
 		for (int i = 1; i <= 50; i++) {
-			FILES.add(new FileModel(Long.valueOf(i), "Arquivo_" + i + ".pdf"));
+			FILES.add(new FileModel(Long.valueOf(i), "Receituario_" + i + ".pdf", "Fulano Beltrano da Silva"));
 		}
 	}
 

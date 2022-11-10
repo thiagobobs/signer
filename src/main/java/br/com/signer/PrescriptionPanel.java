@@ -3,6 +3,7 @@ package br.com.signer;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.prefs.Preferences;
@@ -77,7 +78,7 @@ public class PrescriptionPanel extends JPanel {
 			if (listSelectionModel.isSelectionEmpty()) {
 				JOptionPane.showMessageDialog(null, "Necessário selecionar pelo menos um receituário para assinatura", null, JOptionPane.WARNING_MESSAGE);
 			} else {
-				List<String> certFiles = getCertFiles("A1");
+				List<String> certFiles = getCertFiles();
 
 				if (certFiles.isEmpty()) {
 					JOptionPane.showMessageDialog(null, "Nenhum certificado cadastrado", null, JOptionPane.WARNING_MESSAGE);					
@@ -90,9 +91,13 @@ public class PrescriptionPanel extends JPanel {
 					}
 
 					String selectedCertFile = null;
-					if (certFiles.size() > 1) {
-						selectedCertFile = (String)JOptionPane.showInputDialog(null, "Certificados", "Escolha um certificado", JOptionPane.INFORMATION_MESSAGE, null, certFiles.toArray(), null);
+			
+					if (certFiles.size() == 1) {
+						selectedCertFile = certFiles.get(0);
+					} else {
+						selectedCertFile = (String)JOptionPane.showInputDialog(null, "Certificados cadastrados", "Escolha um certificado", JOptionPane.INFORMATION_MESSAGE, null, certFiles.toArray(), null);
 					}
+					
 					if (selectedCertFile != null) {
 						JOptionPane.showMessageDialog(null, "Operação realizada com sucesso", null, JOptionPane.INFORMATION_MESSAGE);
 					}
@@ -101,15 +106,19 @@ public class PrescriptionPanel extends JPanel {
 		});
 	}
 
-	private List<String> getCertFiles(String type) {
+	private List<String> getCertFiles() {
+		String[] types = {"A1", "A3"};
 		List<String> files = new LinkedList<>();
-		int size = this.preferences.node(type).getInt("size", 0);
 
-		if (size != 0) {
-			for (int i = 0; i < size; i++) {
-				files.add(this.preferences.node(type).get("file_" + i, null));
+		Arrays.asList(types).forEach(t -> {
+			int size = this.preferences.node(t).getInt("size", 0);
+
+			if (size != 0) {
+				for (int i = 0; i < size; i++) {
+					files.add(this.preferences.node(t).get("file_" + i, null));
+				}
 			}
-		}
+		});
 
 		return files;
 	}

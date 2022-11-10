@@ -4,11 +4,13 @@ public class FileModel {
 
 	private Long id;
 	private String name;
+	private String paciente;
 
-	public FileModel(Long id, String name) {
+	public FileModel(Long id, String name, String paciente) {
 		super();
 		this.id = id;
 		this.name = name;
+		this.paciente = paciente;
 	}
 
 	public Long getId() {
@@ -27,9 +29,12 @@ public class FileModel {
 		this.name = name;
 	}
 
-	@Override
-	public String toString() {
-		return "FileModel [id=" + id + ", name=" + name + "]";
+	public String getPaciente() {
+		return paciente;
+	}
+
+	public void setPaciente(String paciente) {
+		this.paciente = paciente;
 	}
 
 }

@@ -11,6 +11,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.UIManager;
+import javax.swing.UIManager.LookAndFeelInfo;
 
 public class MainFrame extends JFrame {
 
@@ -25,10 +26,21 @@ public class MainFrame extends JFrame {
 		super("Título");
 
 		try {
-			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		    for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
+		        if ("Nimbus".equals(info.getName())) {
+		            UIManager.setLookAndFeel(info.getClassName());
+		            break;
+		        }
+		    }
 		} catch (Exception e) {
-			System.out.println("Fail to load and set look and feel.");
+		    // If Nimbus is not available, you can set the GUI to another look and feel.
 		}
+
+//		try {
+//			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+//		} catch (Exception e) {
+//			System.out.println("Fail to load and set look and feel.");
+//		}
 
 		setLayout(new BorderLayout());
 

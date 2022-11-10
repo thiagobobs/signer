@@ -7,7 +7,7 @@ import javax.swing.table.AbstractTableModel;
 public class PrescriptionTableModel extends AbstractTableModel {
 
 	private static final long serialVersionUID = 1L;
-	private static final String[] COLUMNS_NAME = { "ID", "Arquivo" };
+	private static final String[] COLUMNS_NAME = { "ID", "Arquivo", "Paciente" };
 
 	private transient List<FileModel> tableItems;
 
@@ -35,6 +35,8 @@ public class PrescriptionTableModel extends AbstractTableModel {
 				return file.getId();
 			case 1:
 				return file.getName();
+			case 2:
+				return file.getPaciente();
 		}
 
 		return null;
