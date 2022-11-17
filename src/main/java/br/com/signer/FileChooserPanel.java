@@ -4,8 +4,13 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Insets;
+import java.io.File;
+import java.security.KeyStore;
+import java.security.cert.X509Certificate;
+import java.util.Enumeration;
 import java.util.List;
 
+import javax.swing.DefaultListSelectionModel;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JPanel;
@@ -13,6 +18,8 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.filechooser.FileNameExtensionFilter;
+
+import org.apache.commons.lang3.BooleanUtils;
 
 public class FileChooserPanel extends JPanel {
 
@@ -67,6 +74,24 @@ public class FileChooserPanel extends JPanel {
 		gc.fill = GridBagConstraints.HORIZONTAL;
 		add(panel, gc);
 
+		this.table.getSelectionModel().addListSelectionListener(event -> {
+			if (BooleanUtils.isFalse(event.getValueIsAdjusting()) && ((DefaultListSelectionModel)event.getSource()).getAnchorSelectionIndex() != -1) {
+				try {
+					KeyStore keyStore = new KeyStoreManager().getKeyStore(new File(((CertTableModel) this.table.getModel()).getItems().get(this.table.getSelectedRow())));
+					Enumeration<String> aliases = keyStore.aliases();
+
+					while (aliases.hasMoreElements()) {
+						this.fileChooserListener.certSelected(new CertSelectedEvent(
+								this, this.formatCertInfo((X509Certificate) keyStore.getCertificate(aliases.nextElement()))));
+
+						break;
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+
 		this.addButton.addActionListener(event -> {
 			if (this.fileChooser.showOpenDialog(FileChooserPanel.this) == JFileChooser.APPROVE_OPTION) {
 				String fileName = this.fileChooser.getSelectedFile().toString();
@@ -89,6 +114,34 @@ public class FileChooserPanel extends JPanel {
 
 	public void addFileChooserListener(FileChooserListener fileChooserListener) {
 		this.fileChooserListener = fileChooserListener;
+	}
+
+	private String formatCertInfo(X509Certificate certificate) {
+		StringBuilder info = new StringBuilder();
+		
+		info.append("<strong>Issued To</strong><br><ul>");
+		String[] str1 = certificate.getSubjectDN().getName().split(", ");
+		for (int i = 0; i < str1.length; i++) {
+			info.append("<li>" + str1[i] + "</li>");
+		}
+
+		info.append("</ul>");
+		
+		info.append("<strong>Issued By</strong><br><ul>");
+		String[] str2 = certificate.getIssuerDN().getName().split(", ");
+		for (int i = 0; i < str2.length; i++) {
+			info.append("<li>" + str2[i] + "</li>");
+		}
+		
+		info.append("</ul>");
+		
+		info.append("<strong>Validity Period</strong><br><ul>");
+		info.append("<li>Issued On=" + certificate.getNotBefore() + "</li>");
+		info.append("<li>Expires On=" + certificate.getNotAfter() + "</li>");
+
+		info.append("</ul>");
+		
+		return info.toString();
 	}
 
 }

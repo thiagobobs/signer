@@ -1,10 +1,6 @@
 package br.com.signer;
 
 import java.awt.BorderLayout;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.prefs.BackingStoreException;
-import java.util.prefs.Preferences;
 
 import javax.swing.BorderFactory;
 import javax.swing.JPanel;
@@ -14,27 +10,32 @@ public class CertConfigPanel extends JPanel {
 
 	private static final long serialVersionUID = 1L;
 
-	private Preferences preferences;
 	private JTabbedPane tabPane;
 	private FileChooserPanel certA1FileChooserPanel;
 	private FileChooserPanel certA3FileChooserPanel;
 
+	private PreferencesManager preferencesManager;
+
+	private CertConfigListener certConfigListener;
+
 	public CertConfigPanel() {
 		super();
 
-		this.preferences = Preferences.userRoot().node("signer");
+		this.preferencesManager = PreferencesManager.getInstance();
 
 		setLayout(new BorderLayout());
 
+		this.certA1FileChooserPanel = new FileChooserPanel(new String[] { "Certificado" }, 
+				this.preferencesManager.getCertFiles(CertTypeEnum.A1.name()), "Certificado (*.pfx, *.p12)", new String[] { "pfx", "p12" });
+
+		this.certA3FileChooserPanel = new FileChooserPanel(new String[] { "Driver" }, 
+				this.preferencesManager.getCertFiles(CertTypeEnum.A3.name()), "Driver (*.lib, *.dylib)", new String[] { "lib", "dylib" });
+
 		this.tabPane = new JTabbedPane();
+		this.tabPane.addTab(CertTypeEnum.A1.name(), this.certA1FileChooserPanel);
+		this.tabPane.addTab(CertTypeEnum.A3.name(), this.certA3FileChooserPanel);
 
-		this.certA1FileChooserPanel = new FileChooserPanel(new String[] { "Certificado" }, this.getFiles("A1"), "Certificado (*.pfx, *.p12)", new String[] { "pfx", "p12" });
-		this.certA3FileChooserPanel = new FileChooserPanel(new String[] { "Driver" }, this.getFiles("A3"), "Driver (*.lib, *.dylib)", new String[] { "lib", "dylib" });
-
-		tabPane.addTab("A1", this.certA1FileChooserPanel);
-		tabPane.addTab("A3", this.certA3FileChooserPanel);
-
-		add(tabPane, BorderLayout.CENTER);
+		add(this.tabPane, BorderLayout.CENTER);
 
 		setBorder(BorderFactory.createEmptyBorder(5, 8, 5, 8));
 
@@ -42,12 +43,17 @@ public class CertConfigPanel extends JPanel {
 
 			@Override
 			public void certAdded(CertAddedEvent event) {
-				addFileName(event.getFileName(), "A1");
+				preferencesManager.addCertFile(event.getFileName(), CertTypeEnum.A1.name());
 			}
 
 			@Override
 			public void certRemoved(CertRemovedEvent event) {
-				removeFilename(event.getIndex(), "A1");
+				preferencesManager.removeCertFile(event.getIndex(), CertTypeEnum.A1.name());
+			}
+
+			@Override
+			public void certSelected(CertSelectedEvent event) {
+				certConfigListener.configSelected(event.getText());
 			}
 
 		});
@@ -56,54 +62,24 @@ public class CertConfigPanel extends JPanel {
 
 			@Override
 			public void certAdded(CertAddedEvent event) {
-				addFileName(event.getFileName(), "A3");
+				preferencesManager.addCertFile(event.getFileName(), CertTypeEnum.A3.name());
 			}
 
 			@Override
 			public void certRemoved(CertRemovedEvent event) {
-				removeFilename(event.getIndex(), "A3");
+				preferencesManager.removeCertFile(event.getIndex(), CertTypeEnum.A3.name());
+			}
+
+			@Override
+			public void certSelected(CertSelectedEvent event) {
+				certConfigListener.configSelected(event.getText());
 			}
 
 		});
 	}
 
-	private List<String> getFiles(String type) {
-		List<String> files = new LinkedList<>();
-		int size = this.preferences.node(type).getInt("size", 0);
-
-		if (size != 0) {
-			for (int i = 0; i < size; i++) {
-				files.add(this.preferences.node(type).get("file_" + i, null));
-			}
-		}
-
-		return files;
-	}
-
-	private void addFileName(String fileName, String type) {
-		int size = preferences.node(type).getInt("size", 0);
-
-		preferences.node(type).put("file_" + size, fileName);
-		preferences.node(type).putInt("size", ++size);
-	}
-
-	private void removeFilename(int index, String type) {
-		List<String> files = getFiles(type);
-		int size = preferences.node(type).getInt("size", 0);
-
-		try {
-			preferences.node(type).removeNode();
-		} catch (BackingStoreException e) {
-			// Ops...
-		}
-
-		files.forEach(f -> {
-			if (index != files.indexOf(f)) {
-				addFileName(f, type);
-			}
-		});
-
-		preferences.node(type).putInt("size", --size);
+	public void addCertConfigListener(CertConfigListener certConfigListener) {
+		this.certConfigListener = certConfigListener;
 	}
 
 }

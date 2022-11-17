@@ -26,10 +26,17 @@ public class ConfigDialog extends JDialog {
 		setSize(650, 400);
 
 		Utils.centralizeWindow(this);
-//		Dimension dimension = Toolkit.getDefaultToolkit().getScreenSize();
-//		setLocation(dimension.width / 2 - this.getSize().width / 2, dimension.height / 2 - this.getSize().height / 2);
 
 		setResizable(Boolean.FALSE);
+
+		this.certConfigPanel.addCertConfigListener(new CertConfigListener() {
+			
+			@Override
+			public void configSelected(String text) {
+				certInfoPanel.setText(text);
+			}
+
+		});
 	}
 
 }

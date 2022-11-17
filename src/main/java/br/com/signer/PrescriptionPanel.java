@@ -3,10 +3,7 @@ package br.com.signer;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.prefs.Preferences;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -25,7 +22,6 @@ public class PrescriptionPanel extends JPanel {
 	
 	private ApiClient apiClient = new ApiClient();
 
-	private Preferences preferences;
 	private PrescriptionTableModel prescriptionTableModel;
 
 	private JTable prescriptionTable;
@@ -33,8 +29,6 @@ public class PrescriptionPanel extends JPanel {
 
 	public PrescriptionPanel() {
 		super();
-
-		this.preferences = Preferences.userRoot().node("signer");
 
 		setName("prescriptionPanel");
 
@@ -78,7 +72,7 @@ public class PrescriptionPanel extends JPanel {
 			if (listSelectionModel.isSelectionEmpty()) {
 				JOptionPane.showMessageDialog(null, "Necessário selecionar pelo menos um receituário para assinatura", null, JOptionPane.WARNING_MESSAGE);
 			} else {
-				List<String> certFiles = getCertFiles();
+				List<String> certFiles = PreferencesManager.getInstance().getCertFiles();
 
 				if (certFiles.isEmpty()) {
 					JOptionPane.showMessageDialog(null, "Nenhum certificado cadastrado", null, JOptionPane.WARNING_MESSAGE);					
@@ -95,7 +89,7 @@ public class PrescriptionPanel extends JPanel {
 					if (certFiles.size() == 1) {
 						selectedCertFile = certFiles.get(0);
 					} else {
-						selectedCertFile = (String)JOptionPane.showInputDialog(null, "Certificados cadastrados", "Escolha um certificado", JOptionPane.INFORMATION_MESSAGE, null, certFiles.toArray(), null);
+						selectedCertFile = (String)JOptionPane.showInputDialog(null, "Escolha um certificado", null, JOptionPane.INFORMATION_MESSAGE, null, certFiles.toArray(), null);
 					}
 					
 					if (selectedCertFile != null) {
@@ -104,23 +98,6 @@ public class PrescriptionPanel extends JPanel {
 				}
 			}
 		});
-	}
-
-	private List<String> getCertFiles() {
-		String[] types = {"A1", "A3"};
-		List<String> files = new LinkedList<>();
-
-		Arrays.asList(types).forEach(t -> {
-			int size = this.preferences.node(t).getInt("size", 0);
-
-			if (size != 0) {
-				for (int i = 0; i < size; i++) {
-					files.add(this.preferences.node(t).get("file_" + i, null));
-				}
-			}
-		});
-
-		return files;
 	}
 
 }

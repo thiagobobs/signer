@@ -8,4 +8,6 @@ public interface FileChooserListener extends EventListener {
 
 	public void certRemoved(CertRemovedEvent event);
 
+	public void certSelected(CertSelectedEvent event);
+
 }
