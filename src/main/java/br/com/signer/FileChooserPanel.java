@@ -80,12 +80,12 @@ public class FileChooserPanel extends JPanel {
 					KeyStore keyStore = new KeyStoreManager().getKeyStore(new File(((CertTableModel) this.table.getModel()).getItems().get(this.table.getSelectedRow())));
 					Enumeration<String> aliases = keyStore.aliases();
 
-					while (aliases.hasMoreElements()) {
+//					while (aliases.hasMoreElements()) {
 						this.fileChooserListener.certSelected(new CertSelectedEvent(
 								this, this.formatCertInfo((X509Certificate) keyStore.getCertificate(aliases.nextElement()))));
 
-						break;
-					}
+//						break;
+//					}
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
