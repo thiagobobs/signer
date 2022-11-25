@@ -13,6 +13,7 @@ import com.itextpdf.signatures.BouncyCastleDigest;
 import com.itextpdf.signatures.DigestAlgorithms;
 import com.itextpdf.signatures.IExternalDigest;
 import com.itextpdf.signatures.IExternalSignature;
+import com.itextpdf.signatures.OcspClientBouncyCastle;
 import com.itextpdf.signatures.PdfSignatureAppearance;
 import com.itextpdf.signatures.PdfSigner;
 import com.itextpdf.signatures.PrivateKeySignature;
@@ -39,11 +40,11 @@ public class SignService {
 	                .setPageNumber(1);
 	        signer.setFieldName("sig");
 	 
-	        IExternalSignature pks = new PrivateKeySignature(pk, DigestAlgorithms.SHA1, provider.getName());
 	        IExternalDigest digest = new BouncyCastleDigest();
+	        IExternalSignature pks = new PrivateKeySignature(pk, DigestAlgorithms.SHA256, provider.getName());
 	 
 	        // Sign the document using the detached mode, CMS or CAdES equivalent.
-	        signer.signDetached(digest, pks, chain, null, null, null, 0, PdfSigner.CryptoStandard.CADES);
+	        signer.signDetached(digest, pks, chain, null, null, null, 0, PdfSigner.CryptoStandard.CMS);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}

@@ -111,9 +111,9 @@ public class PrescriptionPanel extends JPanel {
 						
 						try {
 							KeyStore keyStore = new KeyStoreManager().getKeyStore(new File("/home/thiago/Development/certificates/cnj/new2/cert.p12"));
-							String aliase = keyStore.aliases().nextElement();
+							String alias = keyStore.aliases().nextElement();
 							
-							this.signService.sign((PrivateKey)keyStore.getKey(aliase, "123456".toCharArray()), keyStore.getProvider(), keyStore.getCertificateChain(aliase));
+							this.signService.sign((PrivateKey)keyStore.getKey(alias, "123456".toCharArray()), keyStore.getProvider(), keyStore.getCertificateChain(alias));
 						} catch (Exception ex) {
 							
 						}
