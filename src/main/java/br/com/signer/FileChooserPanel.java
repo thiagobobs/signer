@@ -32,7 +32,7 @@ public class FileChooserPanel extends JPanel {
 
 	private FileChooserListener fileChooserListener;
 	
-	public FileChooserPanel(String[] tableColumnsName, List<String> items, String fileNameExtensionDescription, String[] fileNamesExtensions) {
+	public FileChooserPanel(CertTypeEnum certType, String[] tableColumnsName, List<String> items, String fileNameExtensionDescription, String[] fileNamesExtensions) {
 		super();
 		
 		setLayout(new GridBagLayout());		
@@ -77,7 +77,7 @@ public class FileChooserPanel extends JPanel {
 		this.table.getSelectionModel().addListSelectionListener(event -> {
 			if (BooleanUtils.isFalse(event.getValueIsAdjusting()) && ((DefaultListSelectionModel)event.getSource()).getAnchorSelectionIndex() != -1) {
 				try {
-					KeyStore keyStore = new KeyStoreManager().getKeyStore(new File(((CertTableModel) this.table.getModel()).getItems().get(this.table.getSelectedRow())));
+					KeyStore keyStore = new KeyStoreManager().getKeyStore(certType, new File(((CertTableModel) this.table.getModel()).getItems().get(this.table.getSelectedRow())));
 					Enumeration<String> aliases = keyStore.aliases();
 
 					while (aliases.hasMoreElements()) {

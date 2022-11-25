@@ -25,10 +25,10 @@ public class CertConfigPanel extends JPanel {
 
 		setLayout(new BorderLayout());
 
-		this.certA1FileChooserPanel = new FileChooserPanel(new String[] { "Certificado" }, 
+		this.certA1FileChooserPanel = new FileChooserPanel(CertTypeEnum.A1, new String[] { "Certificado" }, 
 				this.preferencesManager.getCertFiles(CertTypeEnum.A1.name()), "Certificado (*.pfx, *.p12)", new String[] { "pfx", "p12" });
 
-		this.certA3FileChooserPanel = new FileChooserPanel(new String[] { "Driver" }, 
+		this.certA3FileChooserPanel = new FileChooserPanel(CertTypeEnum.A3, new String[] { "Driver" }, 
 				this.preferencesManager.getCertFiles(CertTypeEnum.A3.name()), "Driver (*.lib, *.dylib)", new String[] { "lib", "dylib" });
 
 		this.tabPane = new JTabbedPane();
