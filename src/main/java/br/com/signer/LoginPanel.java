@@ -5,6 +5,8 @@ import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.io.IOException;
+import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -20,6 +22,9 @@ import org.apache.commons.lang3.StringUtils;
 public class LoginPanel extends JPanel {
 
 	private static final long serialVersionUID = 1L;
+
+	private PreferencesManager preferencesManager = PreferencesManager.getInstance();
+	private ApiClient apiClient = new ApiClient();
 
 	private JLabel instanceLabel;
 	private JTextField instanceField;
@@ -39,12 +44,14 @@ public class LoginPanel extends JPanel {
 
 		setLayout(new GridBagLayout());
 
+		Credential credential = this.preferencesManager.getCredential();
+
 		this.instanceLabel = new JLabel("Instância:");
-		this.instanceField = new JTextField();
+		this.instanceField = new JTextField(credential.getInstance());
 		this.instanceField.setPreferredSize(new Dimension(200, 25));
 
 		this.userLabel = new JLabel("Usuário:");
-		this.userFiled = new JTextField();
+		this.userFiled = new JTextField(credential.getDocument());
 		this.userFiled.setPreferredSize(new Dimension(200, 25));
 
 		this.passwordLabel = new JLabel("Senha:");
@@ -122,7 +129,15 @@ public class LoginPanel extends JPanel {
 			}
 
 			if (StringUtils.isNotBlank(this.instanceField.getText()) && StringUtils.isNotBlank(this.userFiled.getText()) && this.passwordField.getPassword().length != 0) {
-				this.loginListener.loginSuccess(new LoginSuccessEvent(this));
+				try {
+					List<FileModel> files = this.apiClient.getFiles(this.instanceField.getText(), this.userFiled.getText(), new String(this.passwordField.getPassword()));
+
+					this.preferencesManager.addCredential(new Credential(this.instanceField.getText(), this.userFiled.getText()));
+
+					this.loginListener.loginSuccess(new LoginEvent(files));
+				} catch (IOException ex) {
+					this.loginListener.loginFail(new LoginEvent(ex.getLocalizedMessage()));
+				}
 			}
 
 		});

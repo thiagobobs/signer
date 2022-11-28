@@ -7,6 +7,8 @@ import java.lang.reflect.Constructor;
 import java.security.KeyStore;
 import java.security.Provider;
 
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+
 public class KeyStoreManager {
 
 	public KeyStore getKeyStore(CertTypeEnum certType, File file) throws Exception {

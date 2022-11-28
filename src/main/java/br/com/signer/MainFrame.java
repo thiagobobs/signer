@@ -9,6 +9,7 @@ import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
@@ -70,8 +71,23 @@ public class MainFrame extends JFrame {
 		setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 		setVisible(Boolean.TRUE);
 
-		this.loginPanel.addLoginListener(loginSuccessEvent -> {
-			((CardLayout)overlaidPanel.getLayout()).show(overlaidPanel, this.prescriptionPanel.getName());
+//		this.loginPanel.addLoginListener(loginEvent -> {
+//			((CardLayout)overlaidPanel.getLayout()).show(overlaidPanel, this.prescriptionPanel.getName());
+//		});
+
+		this.loginPanel.addLoginListener(new LoginListener() {
+			
+			@Override
+			public void loginSuccess(LoginEvent event) {
+				prescriptionPanel.setTableModel(event.getFiles());
+				((CardLayout)overlaidPanel.getLayout()).show(overlaidPanel, prescriptionPanel.getName());
+			}
+			
+			@Override
+			public void loginFail(LoginEvent event) {
+				JOptionPane.showMessageDialog(null, event.getError(), null, JOptionPane. ERROR_MESSAGE);
+			}
+
 		});
 
 		addWindowListener(new WindowAdapter() {

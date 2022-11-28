@@ -4,6 +4,7 @@ import java.util.EventListener;
 
 public interface LoginListener extends EventListener {
 
-	public void loginSuccess(LoginSuccessEvent event);
+	public void loginSuccess(LoginEvent event);
+	public void loginFail(LoginEvent event);
 
 }
