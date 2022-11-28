@@ -110,12 +110,14 @@ public class PrescriptionPanel extends JPanel {
 //						this.signService.sign(((PrescriptionTableModel)prescriptionTable.getModel()).getTableItems().get(0).getName());
 						
 						try {
-							KeyStore keyStore = new KeyStoreManager().getKeyStore(new File("/home/thiago/Development/certificates/cnj/new2/cert.p12"));
+//							KeyStore keyStore = new KeyStoreManager().getKeyStore(CertTypeEnum.A1, new File("/home/thiago/Development/certificates/cnj/new2/cert.p12"));
+							KeyStore keyStore = new KeyStoreManager().getKeyStore(CertTypeEnum.A3, new File("/usr/local/lib/libdesktopID_Provider.dylib"));
+
 							String alias = keyStore.aliases().nextElement();
 							
 							this.signService.sign((PrivateKey)keyStore.getKey(alias, "123456".toCharArray()), keyStore.getProvider(), keyStore.getCertificateChain(alias));
 						} catch (Exception ex) {
-							
+							ex.printStackTrace();
 						}
 
 						JOptionPane.showMessageDialog(null, "Operação realizada com sucesso", null, JOptionPane.INFORMATION_MESSAGE);

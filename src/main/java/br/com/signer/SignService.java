@@ -21,10 +21,13 @@ import com.itextpdf.signatures.PrivateKeySignature;
 public class SignService {
 
 	public void sign(PrivateKey pk, Provider provider, Certificate[] chain) {
+//		String path = "/home/thiago/Downloads/InfoDental/";
+		String path = "/Users/thiago/Downloads/InfoDental/";
+		
 		Security.addProvider(provider);
 		try {
-	        PdfReader reader = new PdfReader("/home/thiago/Downloads/InfoDental/teste.pdf");
-	        PdfSigner signer = new PdfSigner(reader, new FileOutputStream("/home/thiago/Downloads/InfoDental/teste_signed.pdf"), new StampingProperties());
+	        PdfReader reader = new PdfReader(path + "teste.pdf");
+	        PdfSigner signer = new PdfSigner(reader, new FileOutputStream(path + "teste_signed.pdf"), new StampingProperties());
 	        
 	        // Create the signature appearance
 	        Rectangle rect = new Rectangle(36, 648, 200, 100);
