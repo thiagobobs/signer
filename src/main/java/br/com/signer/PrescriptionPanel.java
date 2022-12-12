@@ -1,38 +1,49 @@
 package br.com.signer;
 
+import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
 import java.io.File;
 import java.security.KeyStore;
 import java.security.PrivateKey;
-import java.util.Enumeration;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingWorker;
 import javax.swing.border.Border;
 import javax.swing.border.EtchedBorder;
-import javax.swing.table.TableColumnModel;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import br.com.signer.model.CredentialModel;
+import br.com.signer.model.PrescriptionModel;
 
 public class PrescriptionPanel extends JPanel {
 
 	private static final long serialVersionUID = 1L;
+	private static final Logger LOGGER = LogManager.getLogger(PrescriptionPanel.class);
 	
-//	private ApiClient apiClient = new ApiClient();
 	private SignService signService = new SignService();
+	private ApiClient apiClient = new ApiClient();
 
 	private JTable prescriptionTable;
 	private JButton signButton;
 
-	public PrescriptionPanel() {
+	private ProgressDialog progressDialog;
+
+	private CredentialModel credential;
+
+	public PrescriptionPanel(JFrame parent) {
 		super();
 
 		setName("prescriptionPanel");
@@ -41,11 +52,13 @@ public class PrescriptionPanel extends JPanel {
 		this.prescriptionTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 		
 		this.signButton = new JButton("Assinar");
+		this.signButton.setBackground(new Color(52, 71, 72));
+		this.signButton.setForeground(Color.WHITE);
 
-//		TableColumnModel columnModel = this.prescriptionTable.getColumnModel();
-//		columnModel.getColumn(0).setMaxWidth(200);
+		this.progressDialog = new ProgressDialog(parent);
 
 		setLayout(new GridBagLayout());
+		setBackground(Color.WHITE);
 
 		GridBagConstraints gc = new GridBagConstraints();
 
@@ -69,18 +82,6 @@ public class PrescriptionPanel extends JPanel {
 		Border outerBorder = BorderFactory.createEmptyBorder(5, 5, 5, 5);
 		setBorder(BorderFactory.createCompoundBorder(outerBorder, innerBorder));
 
-//		addComponentListener(new ComponentAdapter() {
-//
-//			@Override
-//			public void componentShown(ComponentEvent e) {
-//				PrescriptionTableModel model = new PrescriptionTableModel();
-//				model.setTableItems(apiClient.getFiles());
-//
-//				prescriptionTable.setModel(model);
-//			}
-//
-//		});
-
 		signButton.addActionListener(event -> {
 			ListSelectionModel listSelectionModel = this.prescriptionTable.getSelectionModel();
 			if (listSelectionModel.isSelectionEmpty()) {
@@ -100,39 +101,95 @@ public class PrescriptionPanel extends JPanel {
 					}
 					
 					if (selectedCertFile != null) {
+						List<PrescriptionModel> selectedPrescriptions = new ArrayList<>();
+
 						int minSelectionIndex = listSelectionModel.getMinSelectionIndex();
 						int maxSelectionIndex = listSelectionModel.getMaxSelectionIndex();
 
 						for (int i = minSelectionIndex; i <= maxSelectionIndex; i++) {
-							System.out.println(((PrescriptionTableModel)prescriptionTable.getModel()).getTableItems().get(i));
+							selectedPrescriptions.add(((PrescriptionTableModel)prescriptionTable.getModel()).getTableItems().get(i));
 						}
 
-//						this.signService.sign(((PrescriptionTableModel)prescriptionTable.getModel()).getTableItems().get(0).getName());
-						
-						try {
-//							KeyStore keyStore = new KeyStoreManager().getKeyStore(CertTypeEnum.A1, new File("/home/thiago/Development/certificates/cnj/new2/cert.p12"));
-							KeyStore keyStore = new KeyStoreManager().getKeyStore(CertTypeEnum.A3, new File("/usr/local/lib/libdesktopID_Provider.dylib"));
-
-							String alias = keyStore.aliases().nextElement();
-							
-							this.signService.sign((PrivateKey)keyStore.getKey(alias, "123456".toCharArray()), keyStore.getProvider(), keyStore.getCertificateChain(alias));
-						} catch (Exception ex) {
-							ex.printStackTrace();
-						}
-
-						JOptionPane.showMessageDialog(null, "Operação realizada com sucesso", null, JOptionPane.INFORMATION_MESSAGE);
+						this.progressDialog.setVisible(Boolean.TRUE);
+						this.sign(selectedCertFile, selectedPrescriptions);
 					}
 				}
 			}
 		});
 	}
 
-	public void setTableModel(List<FileModel> files) {
+	private void sign(String selectedCertFile, List<PrescriptionModel> selectedPrescriptions) {
+		SwingWorker<Void, Void> worker = new SwingWorker<>() {
+
+			@Override
+			protected Void doInBackground() throws Exception {
+				KeyStore keyStore = new KeyStoreManager().getKeyStore(CertTypeEnum.A3, new File(selectedCertFile));
+				String alias = keyStore.aliases().nextElement();
+
+				signService.sign((PrivateKey) keyStore.getKey(alias, null), keyStore.getProvider(),
+						keyStore.getCertificateChain(alias), credential.getInstance(), selectedPrescriptions);
+
+				return null;
+			}
+
+			@Override
+			protected void done() {
+				try {
+					get();
+
+					progressDialog.setVisible(Boolean.FALSE);
+					JOptionPane.showMessageDialog(null, "Operação realizada com sucesso", null, JOptionPane.INFORMATION_MESSAGE);
+				} catch (Exception ex) {
+					LOGGER.info("Process of sign documents has fail. Reason: {}", ex.getCause().getLocalizedMessage());
+
+					progressDialog.setVisible(Boolean.FALSE);
+					JOptionPane.showMessageDialog(null, ex.getCause().getLocalizedMessage(), null, JOptionPane.ERROR_MESSAGE);
+					
+					return;
+				}
+
+				progressDialog.setVisible(Boolean.TRUE);
+				refreshTableModel();
+			}
+
+		};
+
+		worker.execute();
+	}
+
+	private void refreshTableModel() {
+		SwingWorker<List<PrescriptionModel>, Void> worker = new SwingWorker<>() {
+
+			@Override
+			protected List<PrescriptionModel> doInBackground() throws Exception {
+				return apiClient.getFiles(credential);
+			}
+
+			@Override
+			protected void done() {
+				try {
+					setTableModel(get());
+				} catch (Exception ex) {
+					LOGGER.info("User authentication has fail. Reason: {}", ex.getLocalizedMessage());
+				} finally {
+					progressDialog.setVisible(Boolean.FALSE);
+				}
+			}
+
+		};
+
+		worker.execute();
+	}
+
+	public void setTableModel(List<PrescriptionModel> prescriptions) {
 		PrescriptionTableModel model = new PrescriptionTableModel();
-		model.setTableItems(files);
-//		model.setTableItems(apiClient.getFiles());
+		model.setTableItems(prescriptions);
 
 		this.prescriptionTable.setModel(model);
+	}
+
+	public void setCredential(CredentialModel credential) {
+		this.credential = credential;
 	}
 
 }

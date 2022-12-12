@@ -5,6 +5,9 @@ import java.awt.BorderLayout;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 
+import br.com.signer.listener.CertConfigListener;
+import br.com.signer.util.Utils;
+
 public class ConfigDialog extends JDialog {
 
 	private static final long serialVersionUID = 1L;
@@ -24,10 +27,9 @@ public class ConfigDialog extends JDialog {
 		add(this.certConfigPanel, BorderLayout.CENTER);
 
 		setSize(650, 400);
+		setResizable(Boolean.FALSE);
 
 		Utils.centralizeWindow(this);
-
-		setResizable(Boolean.FALSE);
 
 		this.certConfigPanel.addCertConfigListener(new CertConfigListener() {
 			

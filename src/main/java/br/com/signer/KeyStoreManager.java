@@ -1,13 +1,14 @@
 package br.com.signer;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.InputStream;
+import java.io.IOException;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.KeyStore;
 import java.security.Provider;
-
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 public class KeyStoreManager {
 
@@ -17,9 +18,12 @@ public class KeyStoreManager {
 		if (CertTypeEnum.A1.equals(certType)) {
 			kb = KeyStore.Builder.newInstance("PKCS12", null, file, new KeyStore.CallbackHandlerProtection(new PasswordCallbackHandler()));
 		} else {
-			Class<?> classe = Class.forName("sun.security.pkcs11.SunPKCS11");
-			Constructor<?> constructor = classe.getConstructor(InputStream.class);
-			Provider provider = (Provider) constructor.newInstance(this.getConfigFile("desktopID", file.getAbsolutePath()));
+			Class<?> clazz = Class.forName("sun.security.pkcs11.SunPKCS11");
+			Constructor<?> constructor = clazz.getConstructor();
+			Object object = constructor.newInstance();
+			Method method = object.getClass().getMethod("configure", String.class);
+
+			Provider provider = (Provider) method.invoke(object, this.getConfigFile("desktopID", file.getAbsolutePath()).getAbsolutePath());
 
 			kb = KeyStore.Builder.newInstance("PKCS11", provider, new KeyStore.CallbackHandlerProtection(new PasswordCallbackHandler()));
 		}
@@ -27,9 +31,18 @@ public class KeyStoreManager {
 		return kb != null ? kb.getKeyStore() : null;
 	}
 
-	private ByteArrayInputStream getConfigFile(String providerName, String path) {
+//	private ByteArrayInputStream getConfigFile(String providerName, String path) {
+//		StringBuilder content = new StringBuilder("name=").append(providerName).append("\n").append("library=").append(path);
+//		return new ByteArrayInputStream(content.toString().getBytes());
+//	}
+
+	private File getConfigFile(String providerName, String path) throws IOException {
 		StringBuilder content = new StringBuilder("name=").append(providerName).append("\n").append("library=").append(path);
-		return new ByteArrayInputStream(content.toString().getBytes());
+
+		Path configFile = Files.createTempFile("pkcs11", "cfg");
+		Files.write(configFile, content.toString().getBytes(StandardCharsets.UTF_8));
+
+		return configFile.toFile();
 	}
 
 }

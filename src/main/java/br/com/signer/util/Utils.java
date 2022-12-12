@@ -1,4 +1,4 @@
-package br.com.signer;
+package br.com.signer.util;
 
 import java.awt.Dimension;
 import java.awt.Toolkit;

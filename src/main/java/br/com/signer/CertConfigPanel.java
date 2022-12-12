@@ -6,6 +6,12 @@ import javax.swing.BorderFactory;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 
+import br.com.signer.listener.CertConfigListener;
+import br.com.signer.listener.FileChooserListener;
+import br.com.signer.listener.event.CertAddedEvent;
+import br.com.signer.listener.event.CertRemovedEvent;
+import br.com.signer.listener.event.CertSelectedEvent;
+
 public class CertConfigPanel extends JPanel {
 
 	private static final long serialVersionUID = 1L;

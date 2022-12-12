@@ -5,23 +5,32 @@ import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.io.IOException;
 import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
+import javax.swing.SwingWorker;
 import javax.swing.border.Border;
 import javax.swing.border.EtchedBorder;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import br.com.signer.listener.LoginListener;
+import br.com.signer.listener.event.LoginEvent;
+import br.com.signer.model.CredentialModel;
+import br.com.signer.model.PrescriptionModel;
 
 public class LoginPanel extends JPanel {
 
 	private static final long serialVersionUID = 1L;
+	private static final Logger LOGGER = LogManager.getLogger(LoginPanel.class);
 
 	private PreferencesManager preferencesManager = PreferencesManager.getInstance();
 	private ApiClient apiClient = new ApiClient();
@@ -35,30 +44,40 @@ public class LoginPanel extends JPanel {
 	private JLabel passwordLabel;
 	private JPasswordField passwordField;
 
-	private JButton validateButton;
+	private JButton authenticateButton;
 
 	private LoginListener loginListener;
 
-	public LoginPanel() {
+	private ProgressDialog progressDialog;
+
+	public LoginPanel(JFrame parent) {
 		super();
 
 		setLayout(new GridBagLayout());
+		setBackground(Color.WHITE);
 
-		Credential credential = this.preferencesManager.getCredential();
+		CredentialModel credential = this.preferencesManager.getCredential();
 
 		this.instanceLabel = new JLabel("Instância:");
 		this.instanceField = new JTextField(credential.getInstance());
 		this.instanceField.setPreferredSize(new Dimension(200, 25));
+		this.instanceField.setBackground(new Color(231, 241, 254));
 
 		this.userLabel = new JLabel("Usuário:");
 		this.userFiled = new JTextField(credential.getDocument());
 		this.userFiled.setPreferredSize(new Dimension(200, 25));
+		this.userFiled.setBackground(new Color(231, 241, 254));
 
 		this.passwordLabel = new JLabel("Senha:");
 		this.passwordField = new JPasswordField();
 		this.passwordField.setPreferredSize(new Dimension(200, 25));
+		this.passwordField.setBackground(new Color(231, 241, 254));
 
-		this.validateButton = new JButton("Validar");
+		this.authenticateButton = new JButton("Autenticar");
+		this.authenticateButton.setBackground(new Color(52, 71, 72));
+		this.authenticateButton.setForeground(Color.WHITE);
+
+		this.progressDialog = new ProgressDialog(parent);
 
 		GridBagConstraints gc = new GridBagConstraints();
 
@@ -102,13 +121,13 @@ public class LoginPanel extends JPanel {
 		gc.gridheight = 2;
 		gc.anchor = GridBagConstraints.LAST_LINE_END;
 
-		add(this.validateButton, gc);
+		add(this.authenticateButton, gc);
 
 		Border innerBorder = BorderFactory.createEtchedBorder(EtchedBorder.LOWERED);
 		Border outerBorder = BorderFactory.createEmptyBorder(5, 5, 5, 5);
 		setBorder(BorderFactory.createCompoundBorder(outerBorder, innerBorder));
 
-		this.validateButton.addActionListener(event -> {
+		this.authenticateButton.addActionListener(event -> {
 
 			if (StringUtils.isBlank(this.instanceField.getText())) {
 				this.instanceLabel.setForeground(Color.RED);
@@ -129,22 +148,48 @@ public class LoginPanel extends JPanel {
 			}
 
 			if (StringUtils.isNotBlank(this.instanceField.getText()) && StringUtils.isNotBlank(this.userFiled.getText()) && this.passwordField.getPassword().length != 0) {
-				try {
-					List<FileModel> files = this.apiClient.getFiles(this.instanceField.getText(), this.userFiled.getText(), new String(this.passwordField.getPassword()));
-
-					this.preferencesManager.addCredential(new Credential(this.instanceField.getText(), this.userFiled.getText()));
-
-					this.loginListener.loginSuccess(new LoginEvent(files));
-				} catch (IOException ex) {
-					this.loginListener.loginFail(new LoginEvent(ex.getLocalizedMessage()));
-				}
+				this.progressDialog.setVisible(Boolean.TRUE);
+				this.authenticate(new CredentialModel(this.instanceField.getText(), this.userFiled.getText(), new String(this.passwordField.getPassword())));
 			}
 
 		});
 	}
 
+	private void authenticate(CredentialModel credential) {
+		SwingWorker<List<PrescriptionModel>, Void> worker = new SwingWorker<>() {
+
+			@Override
+			protected List<PrescriptionModel> doInBackground() throws Exception {
+				return apiClient.getFiles(credential);
+			}
+
+			@Override
+			protected void done() {
+				try {
+					List<PrescriptionModel> prescriptions = get();
+					preferencesManager.addCredential(credential);
+
+					progressDialog.setVisible(Boolean.FALSE);
+					loginListener.loginSuccess(new LoginEvent(credential, prescriptions));
+				} catch (Exception ex) {
+					LOGGER.info("User authentication has fail. Reason: {}", ex.getCause().getLocalizedMessage());
+
+					progressDialog.setVisible(Boolean.FALSE);
+					loginListener.loginFail(new LoginEvent(ex.getCause().getLocalizedMessage()));
+				}
+			}
+
+		};
+
+		worker.execute();
+	}
+
 	public void setFocus() {
-		this.instanceField.requestFocus();
+		if (StringUtils.isBlank(this.instanceField.getText())) {
+			this.instanceField.requestFocus();
+		} else {
+			this.passwordField.requestFocus();
+		}
 	}
 
 	public void addLoginListener(LoginListener loginListener) {

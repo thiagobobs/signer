@@ -13,6 +13,7 @@ import java.util.List;
 import javax.swing.DefaultListSelectionModel;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -20,10 +21,19 @@ import javax.swing.ListSelectionModel;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import org.apache.commons.lang3.BooleanUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import br.com.signer.listener.FileChooserListener;
+import br.com.signer.listener.event.CertAddedEvent;
+import br.com.signer.listener.event.CertRemovedEvent;
+import br.com.signer.listener.event.CertSelectedEvent;
 
 public class FileChooserPanel extends JPanel {
 
 	private static final long serialVersionUID = 1L;
+	private static final Logger LOGGER = LogManager.getLogger(FileChooserPanel.class);
 
 	private JTable table;
 	private JButton addButton;
@@ -80,14 +90,11 @@ public class FileChooserPanel extends JPanel {
 					KeyStore keyStore = new KeyStoreManager().getKeyStore(certType, new File(((CertTableModel) this.table.getModel()).getItems().get(this.table.getSelectedRow())));
 					Enumeration<String> aliases = keyStore.aliases();
 
-//					while (aliases.hasMoreElements()) {
-						this.fileChooserListener.certSelected(new CertSelectedEvent(
-								this, this.formatCertInfo((X509Certificate) keyStore.getCertificate(aliases.nextElement()))));
-
-//						break;
-//					}
-				} catch (Exception e) {
-					e.printStackTrace();
+					this.fileChooserListener.certSelected(new CertSelectedEvent(this.formatCertInfo((X509Certificate) keyStore.getCertificate(aliases.nextElement()))));
+				} catch (Exception ex) {
+					this.fileChooserListener.certSelected(new CertSelectedEvent(null));
+					JOptionPane.showMessageDialog(null, ex.getLocalizedMessage(), null, JOptionPane. ERROR_MESSAGE);
+					LOGGER.error(StringUtils.EMPTY, ex);
 				}
 			}
 		});

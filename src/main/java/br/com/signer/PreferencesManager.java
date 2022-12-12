@@ -8,6 +8,8 @@ import java.util.prefs.Preferences;
 
 import org.apache.commons.lang3.StringUtils;
 
+import br.com.signer.model.CredentialModel;
+
 public class PreferencesManager {
 
 	private static PreferencesManager instance;
@@ -72,12 +74,12 @@ public class PreferencesManager {
 		this.preferences.node(type).putInt("size", --size);
 	}
 
-	public Credential getCredential() {
-		return new Credential(this.preferences.node("credential").get("instance", StringUtils.EMPTY),
-				this.preferences.node("credential").get("document", StringUtils.EMPTY));
+	public CredentialModel getCredential() {
+		return new CredentialModel(this.preferences.node("credential").get("instance", StringUtils.EMPTY),
+				this.preferences.node("credential").get("document", StringUtils.EMPTY), null);
 	}
 
-	public void addCredential(Credential credential) {
+	public void addCredential(CredentialModel credential) {
 		this.preferences.node("credential").put("instance", credential.getInstance());
 		this.preferences.node("credential").put("document", credential.getDocument());
 	}

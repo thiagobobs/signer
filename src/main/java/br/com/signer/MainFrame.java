@@ -2,9 +2,12 @@ package br.com.signer;
 
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
+import java.awt.Taskbar;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.IOException;
 
+import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -14,9 +17,17 @@ import javax.swing.JPanel;
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import br.com.signer.listener.LoginListener;
+import br.com.signer.listener.event.LoginEvent;
+import br.com.signer.util.Utils;
+
 public class MainFrame extends JFrame {
 
 	private static final long serialVersionUID = 1L;
+	private static final Logger LOGGER = LogManager.getLogger(MainFrame.class);
 
 	private LoginPanel loginPanel;
 	private MessagePanel messagePanel;
@@ -24,7 +35,14 @@ public class MainFrame extends JFrame {
 	private ConfigDialog configDialog;
 
 	public MainFrame() {
-		super("Título");
+		super("Info Dental");
+
+		try {
+			setIconImage(ImageIO.read(this.getClass().getResourceAsStream("/icons/logo-32.png")));
+			Taskbar.getTaskbar().setIconImage(getIconImage());
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
 
 		try {
 		    for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
@@ -47,9 +65,9 @@ public class MainFrame extends JFrame {
 
 		setJMenuBar(this.createMenuBar());
 
-		this.loginPanel = new LoginPanel();
+		this.loginPanel = new LoginPanel(this);
 		this.messagePanel = new MessagePanel();
-		this.prescriptionPanel = new PrescriptionPanel();
+		this.prescriptionPanel = new PrescriptionPanel(this);
 		this.configDialog = new ConfigDialog(this);
 
 		add(this.loginPanel, BorderLayout.PAGE_START);
@@ -64,10 +82,8 @@ public class MainFrame extends JFrame {
 		setSize(800, 650);
 
 		Utils.centralizeWindow(this);
-//		Dimension dimension = Toolkit.getDefaultToolkit().getScreenSize();
-//		setLocation(dimension.width / 2 - this.getSize().width / 2, dimension.height / 2 - this.getSize().height / 2);
 
-//		setResizable(Boolean.FALSE);
+		setResizable(Boolean.FALSE);
 		setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 		setVisible(Boolean.TRUE);
 
@@ -79,7 +95,9 @@ public class MainFrame extends JFrame {
 			
 			@Override
 			public void loginSuccess(LoginEvent event) {
-				prescriptionPanel.setTableModel(event.getFiles());
+				prescriptionPanel.setCredential(event.getCredential());
+				prescriptionPanel.setTableModel(event.getPrescriptions());
+
 				((CardLayout)overlaidPanel.getLayout()).show(overlaidPanel, prescriptionPanel.getName());
 			}
 			
@@ -95,6 +113,12 @@ public class MainFrame extends JFrame {
 			@Override
 			public void windowOpened(WindowEvent event) {
 				loginPanel.setFocus();
+				LOGGER.info("Application has been started");
+			}
+
+			@Override
+			public void windowClosing(WindowEvent event) {
+				LOGGER.info("Application has been ended");
 			}
 
 		});

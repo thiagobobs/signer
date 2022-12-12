@@ -1,5 +1,6 @@
 package br.com.signer;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.security.Principal;
 import java.security.PrivateKey;
@@ -8,7 +9,14 @@ import java.security.Security;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.itextpdf.kernel.colors.ColorConstants;
 import com.itextpdf.kernel.geom.Rectangle;
@@ -28,82 +36,93 @@ import com.itextpdf.signatures.PdfSignatureAppearance;
 import com.itextpdf.signatures.PdfSigner;
 import com.itextpdf.signatures.PrivateKeySignature;
 
+import br.com.signer.model.PrescriptionModel;
+
 public class SignService {
 
-	public void sign(PrivateKey pk, Provider provider, Certificate[] chain) {
-//		String path = "/home/thiago/Downloads/InfoDental/";
-		String path = "/Users/thiago/Downloads/InfoDental/";
-		
+	private static final Logger LOGGER = LogManager.getLogger(SignService.class);
+
+	private ApiClient apiClient = new ApiClient();
+
+	public void sign(PrivateKey pk, Provider provider, Certificate[] chain, String instance, List<PrescriptionModel> precriptions) throws Exception {
 		Security.addProvider(provider);
-		try {
-	        PdfReader reader = new PdfReader(path + "teste.pdf");
-	        PdfSigner signer = new PdfSigner(reader, new FileOutputStream(path + "teste_signed.pdf"), new StampingProperties());
-	        PdfDocument pdfDocument = signer.getDocument();
-	        
-	        // Create the signature appearance
-	        Rectangle rect = new Rectangle(30, 80, 530, 35);
-//	        Rectangle rect = new Rectangle(350, 410, 130, 40);
-	        PdfSignatureAppearance appearance = signer.getSignatureAppearance();
-	        
-	        appearance
-//	                .setReason("")
-//	                .setLocation("")
-	 
-	                // Specify if the appearance before field is signed will be used
-	                // as a background for the signed field. The "false" value is the default value.
-//	                .setReuseAppearance(false)
-	                .setPageRect(rect)
-//	                .setLayer2Text("Receituário assinado digitalmente por " + this.getCN((X509Certificate)chain[0]))
-//	                .setRenderingMode(PdfSignatureAppearance.RenderingMode.GRAPHIC_AND_DESCRIPTION)
-//	                .setLayer2FontSize(10)
-	                .setPageNumber(1);
-	        signer.setFieldName("sig");
+		List<String> errors = new ArrayList<>();
 
-	        // Get the background layer and draw a gray rectangle as a background.
-	        PdfFormXObject n0 = appearance.getLayer0();
+		for (PrescriptionModel precription : precriptions) {
+			try {
+				String filePath = this.apiClient.downloadFile(precription);
+				File signedFile = new File(filePath.substring(0, filePath.lastIndexOf(".")) + "-signed.pdf");
 
-	        float x = n0.getBBox().toRectangle().getLeft();
-	        float y = n0.getBBox().toRectangle().getBottom();
-	        float width = n0.getBBox().toRectangle().getWidth();
-	        float height = n0.getBBox().toRectangle().getHeight();
+				LOGGER.info("Sign file {}", precription.getFileURL(Boolean.TRUE));
 
-	        PdfCanvas canvas_n0 = new PdfCanvas(n0, pdfDocument);
-	        canvas_n0.setFillColor(ColorConstants.GRAY);
-	        canvas_n0.setExtGState(new PdfExtGState().setFillOpacity(0.1f));
-	        canvas_n0.rectangle(x, y, width, height);
-	        canvas_n0.fill();
-	        
-	        // Set the signature information on layer 2
-	        PdfFormXObject n2 = appearance.getLayer2();
-	        Paragraph p = new Paragraph("Receituário assinado digitalmente por " + this.getCN((X509Certificate)chain[0]) + " em " + new SimpleDateFormat("dd/MM/yyyy").format(Calendar.getInstance().getTime()));
+				PdfReader reader = new PdfReader(filePath);
+				PdfSigner signer = new PdfSigner(reader, new FileOutputStream(signedFile), new StampingProperties());
 
-//	        p.setHeight(60);
-//	        p.setWidth(530);
-	        p.setMargin(10);
-	        p.setFontColor(ColorConstants.BLACK);
-	        p.setFontSize(10);
-	        
-	        Canvas canvas_n2 = new Canvas(n2, pdfDocument);
-	        canvas_n2.add(p);
-	        canvas_n2.close();
-	 
-	        IExternalDigest digest = new BouncyCastleDigest();
-	        IExternalSignature pks = new PrivateKeySignature(pk, DigestAlgorithms.SHA256, provider.getName());
-	 
-	        // Sign the document using the detached mode, CMS or CAdES equivalent.
-	        signer.signDetached(digest, pks, chain, null, null, null, 0, PdfSigner.CryptoStandard.CMS);
-		} catch (Exception ex) {
-			ex.printStackTrace();
+				PdfDocument pdfDocument = signer.getDocument();
+
+				// Create the signature appearance
+				Rectangle rect = new Rectangle(30, 80, 530, 35);
+				// Rectangle rect = new Rectangle(350, 410, 130, 40);
+				PdfSignatureAppearance appearance = signer.getSignatureAppearance();
+				appearance.setPageRect(rect).setPageNumber(1);
+
+				signer.setFieldName("sig");
+
+				// Get the background layer and draw a gray rectangle as a background.
+				PdfFormXObject n0 = appearance.getLayer0();
+
+				float x = n0.getBBox().toRectangle().getLeft();
+				float y = n0.getBBox().toRectangle().getBottom();
+				float width = n0.getBBox().toRectangle().getWidth();
+				float height = n0.getBBox().toRectangle().getHeight();
+
+				PdfCanvas canvas_n0 = new PdfCanvas(n0, pdfDocument);
+				canvas_n0.setFillColor(ColorConstants.GRAY);
+				canvas_n0.setExtGState(new PdfExtGState().setFillOpacity(0.1f));
+				canvas_n0.rectangle(x, y, width, height);
+				canvas_n0.fill();
+
+				// Set the signature information on layer 2
+				PdfFormXObject n2 = appearance.getLayer2();
+				Paragraph p = new Paragraph(
+						"Receituário assinado digitalmente por " + this.getCommonName((X509Certificate) chain[0]) + " em "
+								+ new SimpleDateFormat("dd/MM/yyyy").format(Calendar.getInstance().getTime()));
+
+				p.setMargin(10);
+				p.setFontColor(ColorConstants.BLACK);
+				p.setFontSize(10);
+
+				Canvas canvas_n2 = new Canvas(n2, pdfDocument);
+				canvas_n2.add(p);
+				canvas_n2.close();
+
+				IExternalDigest digest = new BouncyCastleDigest();
+				IExternalSignature pks = new PrivateKeySignature(pk, DigestAlgorithms.SHA256, provider.getName());
+
+				// Sign the document using the detached mode, CMS or CAdES equivalent.
+				signer.signDetached(digest, pks, chain, null, null, null, 0, PdfSigner.CryptoStandard.CMS);
+
+				this.apiClient.sendSignedFile(instance, precription.getPatientId(), precription.getId(), signedFile);
+			} catch (Exception ex) { // Make a personalize Exception
+				errors.add(String.format("Falha ao assinar / enviar o documento %s: %s", precription.getId(), ex.getLocalizedMessage()));
+			}
 		}
+		
+		if (!errors.isEmpty()) {
+			throw new Exception(errors.stream().collect(Collectors.joining(", ")));
+		}
+
 	}
 
-	private String getCN(X509Certificate cert) {
+	private String getCommonName(X509Certificate cert) {
+		String tmpName, name = StringUtils.EMPTY;
+		
 		Principal principal = cert.getSubjectDN();
+		
 		int start = principal.getName().indexOf("CN");
-		String tmpName, name = "";
-		if (start > 0) {
+		if (start != -1) {
 			tmpName = principal.getName().substring(start + 3);
-			int end = tmpName.indexOf(",");
+			int end = tmpName.indexOf(":");
 			if (end > 0) {
 				name = tmpName.substring(0, end);
 			} else {

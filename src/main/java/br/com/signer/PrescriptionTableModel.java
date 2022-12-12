@@ -4,12 +4,14 @@ import java.util.List;
 
 import javax.swing.table.AbstractTableModel;
 
+import br.com.signer.model.PrescriptionModel;
+
 public class PrescriptionTableModel extends AbstractTableModel {
 
 	private static final long serialVersionUID = 1L;
 	private static final String[] COLUMNS_NAME = { "Paciente", "Data do Pedido", "Receituário" };
 
-	private transient List<FileModel> tableItems;
+	private transient List<PrescriptionModel> tableItems;
 
 	@Override
 	public String getColumnName(int column) {
@@ -28,26 +30,26 @@ public class PrescriptionTableModel extends AbstractTableModel {
 
 	@Override
 	public Object getValueAt(int row, int col) {
-		FileModel file = this.tableItems.get(row);
+		PrescriptionModel prescription = this.tableItems.get(row);
 
 		switch (col) {
 			case 0:
-				return file.getPaciente();
+				return prescription.getPatientName();
 			case 1:
-				return file.getDataPedido();
+				return prescription.getRequestDate();
 			case 2:
-				return file.getName().substring(file.getName().lastIndexOf("/") + 1);
+				return prescription.getFileURL(Boolean.TRUE);
 			default:
 				return null;
 		}
 
 	}
 
-	public List<FileModel> getTableItems() {
+	public List<PrescriptionModel> getTableItems() {
 		return tableItems;
 	}
 
-	public void setTableItems(List<FileModel> tableItems) {
+	public void setTableItems(List<PrescriptionModel> tableItems) {
 		this.tableItems = tableItems;
 	}
 

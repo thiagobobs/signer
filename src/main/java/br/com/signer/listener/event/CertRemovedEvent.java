@@ -1,4 +1,4 @@
-package br.com.signer;
+package br.com.signer.listener.event;
 
 import java.util.EventObject;
 
