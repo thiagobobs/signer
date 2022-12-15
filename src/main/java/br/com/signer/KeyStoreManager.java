@@ -10,13 +10,15 @@ import java.nio.file.Path;
 import java.security.KeyStore;
 import java.security.Provider;
 
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+
 public class KeyStoreManager {
 
 	public KeyStore getKeyStore(CertTypeEnum certType, File file) throws Exception {
 		KeyStore.Builder kb = null;
 
 		if (CertTypeEnum.A1.equals(certType)) {
-			kb = KeyStore.Builder.newInstance("PKCS12", null, file, new KeyStore.CallbackHandlerProtection(new PasswordCallbackHandler()));
+			kb = KeyStore.Builder.newInstance("PKCS12", new BouncyCastleProvider(), file, new KeyStore.CallbackHandlerProtection(new PasswordCallbackHandler()));
 		} else {
 			Class<?> clazz = Class.forName("sun.security.pkcs11.SunPKCS11");
 			Constructor<?> constructor = clazz.getConstructor();
@@ -30,11 +32,6 @@ public class KeyStoreManager {
 
 		return kb != null ? kb.getKeyStore() : null;
 	}
-
-//	private ByteArrayInputStream getConfigFile(String providerName, String path) {
-//		StringBuilder content = new StringBuilder("name=").append(providerName).append("\n").append("library=").append(path);
-//		return new ByteArrayInputStream(content.toString().getBytes());
-//	}
 
 	private File getConfigFile(String providerName, String path) throws IOException {
 		StringBuilder content = new StringBuilder("name=").append(providerName).append("\n").append("library=").append(path);

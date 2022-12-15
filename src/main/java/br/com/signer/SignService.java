@@ -62,7 +62,6 @@ public class SignService {
 
 				// Create the signature appearance
 				Rectangle rect = new Rectangle(30, 80, 530, 35);
-				// Rectangle rect = new Rectangle(350, 410, 130, 40);
 				PdfSignatureAppearance appearance = signer.getSignatureAppearance();
 				appearance.setPageRect(rect).setPageNumber(1);
 
@@ -104,7 +103,7 @@ public class SignService {
 
 				this.apiClient.sendSignedFile(instance, precription.getPatientId(), precription.getId(), signedFile);
 			} catch (Exception ex) { // Make a personalize Exception
-				errors.add(String.format("Falha ao assinar / enviar o documento %s: %s", precription.getId(), ex.getLocalizedMessage()));
+				errors.add(String.format("Falha ao assinar/enviar o documento %s: %s", precription.getId(), ex.getLocalizedMessage()));
 			}
 		}
 		

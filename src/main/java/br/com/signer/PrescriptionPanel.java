@@ -25,6 +25,7 @@ import javax.swing.border.EtchedBorder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import br.com.signer.model.CertificateFileModel;
 import br.com.signer.model.CredentialModel;
 import br.com.signer.model.PrescriptionModel;
 
@@ -87,19 +88,19 @@ public class PrescriptionPanel extends JPanel {
 			if (listSelectionModel.isSelectionEmpty()) {
 				JOptionPane.showMessageDialog(null, "Necessário selecionar pelo menos um receituário para assinatura", null, JOptionPane.WARNING_MESSAGE);
 			} else {
-				List<String> certFiles = PreferencesManager.getInstance().getCertFiles();
+				List<CertificateFileModel> certFiles = PreferencesManager.getInstance().getCertFiles();
 
 				if (certFiles.isEmpty()) {
 					JOptionPane.showMessageDialog(null, "Nenhum certificado cadastrado", null, JOptionPane.WARNING_MESSAGE);
 				} else {
-					String selectedCertFile = null;
+					CertificateFileModel selectedCertFile = null;
 			
 					if (certFiles.size() == 1) {
 						selectedCertFile = certFiles.get(0);
 					} else {
-						selectedCertFile = (String)JOptionPane.showInputDialog(null, "Escolha um certificado", null, JOptionPane.INFORMATION_MESSAGE, null, certFiles.toArray(), null);
+						selectedCertFile = (CertificateFileModel)JOptionPane.showInputDialog(null, "Escolha um certificado", null, JOptionPane.INFORMATION_MESSAGE, null, certFiles.toArray(), null);
 					}
-					
+
 					if (selectedCertFile != null) {
 						List<PrescriptionModel> selectedPrescriptions = new ArrayList<>();
 
@@ -118,12 +119,12 @@ public class PrescriptionPanel extends JPanel {
 		});
 	}
 
-	private void sign(String selectedCertFile, List<PrescriptionModel> selectedPrescriptions) {
+	private void sign(CertificateFileModel certFile, List<PrescriptionModel> selectedPrescriptions) {
 		SwingWorker<Void, Void> worker = new SwingWorker<>() {
 
 			@Override
 			protected Void doInBackground() throws Exception {
-				KeyStore keyStore = new KeyStoreManager().getKeyStore(CertTypeEnum.A3, new File(selectedCertFile));
+				KeyStore keyStore = new KeyStoreManager().getKeyStore(certFile.getType(), new File(certFile.getFilePath()));
 				String alias = keyStore.aliases().nextElement();
 
 				signService.sign((PrivateKey) keyStore.getKey(alias, null), keyStore.getProvider(),

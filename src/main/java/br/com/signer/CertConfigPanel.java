@@ -11,6 +11,7 @@ import br.com.signer.listener.FileChooserListener;
 import br.com.signer.listener.event.CertAddedEvent;
 import br.com.signer.listener.event.CertRemovedEvent;
 import br.com.signer.listener.event.CertSelectedEvent;
+import br.com.signer.model.CertificateFileModel;
 
 public class CertConfigPanel extends JPanel {
 
@@ -32,10 +33,10 @@ public class CertConfigPanel extends JPanel {
 		setLayout(new BorderLayout());
 
 		this.certA1FileChooserPanel = new FileChooserPanel(CertTypeEnum.A1, new String[] { "Certificado" }, 
-				this.preferencesManager.getCertFiles(CertTypeEnum.A1.name()), "Certificado (*.pfx, *.p12)", new String[] { "pfx", "p12" });
+				this.preferencesManager.getCertFiles(CertTypeEnum.A1), "Certificado (*.pfx, *.p12)", new String[] { "pfx", "p12" });
 
 		this.certA3FileChooserPanel = new FileChooserPanel(CertTypeEnum.A3, new String[] { "Driver" }, 
-				this.preferencesManager.getCertFiles(CertTypeEnum.A3.name()), "Driver (*.lib, *.dylib)", new String[] { "lib", "dylib" });
+				this.preferencesManager.getCertFiles(CertTypeEnum.A3), "Driver (*.lib, *.dylib)", new String[] { "lib", "dylib" });
 
 		this.tabPane = new JTabbedPane();
 		this.tabPane.addTab(CertTypeEnum.A1.name(), this.certA1FileChooserPanel);
@@ -49,12 +50,12 @@ public class CertConfigPanel extends JPanel {
 
 			@Override
 			public void certAdded(CertAddedEvent event) {
-				preferencesManager.addCertFile(event.getFileName(), CertTypeEnum.A1.name());
+				preferencesManager.addCertFile(new CertificateFileModel(event.getFileName(), CertTypeEnum.A1));
 			}
 
 			@Override
 			public void certRemoved(CertRemovedEvent event) {
-				preferencesManager.removeCertFile(event.getIndex(), CertTypeEnum.A1.name());
+				preferencesManager.removeCertFile(event.getIndex(), CertTypeEnum.A1);
 			}
 
 			@Override
@@ -68,12 +69,12 @@ public class CertConfigPanel extends JPanel {
 
 			@Override
 			public void certAdded(CertAddedEvent event) {
-				preferencesManager.addCertFile(event.getFileName(), CertTypeEnum.A3.name());
+				preferencesManager.addCertFile(new CertificateFileModel(event.getFileName(), CertTypeEnum.A3));
 			}
 
 			@Override
 			public void certRemoved(CertRemovedEvent event) {
-				preferencesManager.removeCertFile(event.getIndex(), CertTypeEnum.A3.name());
+				preferencesManager.removeCertFile(event.getIndex(), CertTypeEnum.A3);
 			}
 
 			@Override

@@ -8,6 +8,7 @@ import java.util.prefs.Preferences;
 
 import org.apache.commons.lang3.StringUtils;
 
+import br.com.signer.model.CertificateFileModel;
 import br.com.signer.model.CredentialModel;
 
 public class PreferencesManager {
@@ -27,51 +28,51 @@ public class PreferencesManager {
 		return instance;
 	}
 
-	public List<String> getCertFiles() {
-		List<String> certFiles = new LinkedList<>();
+	public List<CertificateFileModel> getCertFiles() {
+		List<CertificateFileModel> certFiles = new LinkedList<>();
 
-		Arrays.asList(CertTypeEnum.values()).forEach(t -> certFiles.addAll(getCertFiles(t.name())));
+		Arrays.asList(CertTypeEnum.values()).forEach(t -> certFiles.addAll(getCertFiles(t)));
 
 		return certFiles;
 	}
 
-	public List<String> getCertFiles(String type) {
-		List<String> certFiles = new LinkedList<>();
-		int size = this.preferences.node(type).getInt("size", 0);
+	public List<CertificateFileModel> getCertFiles(CertTypeEnum type) {
+		List<CertificateFileModel> certFiles = new LinkedList<>();
+		int size = this.preferences.node(type.name()).getInt("size", 0);
 
 		if (size != 0) {
 			for (int i = 0; i < size; i++) {
-				certFiles.add(this.preferences.node(type).get("file_" + i, null));
+				certFiles.add(new CertificateFileModel(this.preferences.node(type.name()).get("file_" + i, StringUtils.EMPTY), type));
 			}
 		}
 
 		return certFiles;
 	}
 
-	public void addCertFile(String file, String type) {
-		int size = this.preferences.node(type).getInt("size", 0);
+	public void addCertFile(CertificateFileModel certFile) {
+		int size = this.preferences.node(certFile.getType().name()).getInt("size", 0);
 
-		this.preferences.node(type).put("file_" + size, file);
-		this.preferences.node(type).putInt("size", ++size);
+		this.preferences.node(certFile.getType().name()).put("file_" + size, certFile.getFilePath());
+		this.preferences.node(certFile.getType().name()).putInt("size", ++size);
 	}
 
-	public void removeCertFile(int index, String type) {
-		List<String> files = getCertFiles(type);
-		int size = this.preferences.node(type).getInt("size", 0);
+	public void removeCertFile(int index, CertTypeEnum type) {
+		List<CertificateFileModel> certFiles = getCertFiles(type);
+		int size = this.preferences.node(type.name()).getInt("size", 0);
 
 		try {
-			this.preferences.node(type).removeNode();
+			this.preferences.node(type.name()).removeNode();
 		} catch (BackingStoreException e) {
 			// Ops...
 		}
 
-		files.forEach(f -> {
-			if (index != files.indexOf(f)) {
-				addCertFile(f, type);
+		certFiles.forEach(f -> {
+			if (index != certFiles.indexOf(f)) {
+				addCertFile(f);
 			}
 		});
 
-		this.preferences.node(type).putInt("size", --size);
+		this.preferences.node(type.name()).putInt("size", --size);
 	}
 
 	public CredentialModel getCredential() {

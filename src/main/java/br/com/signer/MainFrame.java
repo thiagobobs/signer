@@ -17,6 +17,7 @@ import javax.swing.JPanel;
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 
+import org.apache.commons.lang3.SystemUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -37,11 +38,13 @@ public class MainFrame extends JFrame {
 	public MainFrame() {
 		super("Info Dental");
 
-		try {
-			setIconImage(ImageIO.read(this.getClass().getResourceAsStream("/icons/logo-32.png")));
-			Taskbar.getTaskbar().setIconImage(getIconImage());
-		} catch (IOException ex) {
-			ex.printStackTrace();
+		if (!SystemUtils.IS_OS_LINUX) {
+			try {
+				setIconImage(ImageIO.read(this.getClass().getResourceAsStream("/icons/logo-32.png")));
+				Taskbar.getTaskbar().setIconImage(getIconImage());
+			} catch (IOException ex) {
+				ex.printStackTrace();
+			}
 		}
 
 		try {
@@ -51,15 +54,15 @@ public class MainFrame extends JFrame {
 		            break;
 		        }
 		    }
-		} catch (Exception e) {
-		    // If Nimbus is not available, you can set the GUI to another look and feel.
-		}
+		} catch (Exception ex) {
+			LOGGER.error("Fail to load and set Nimbus Look and Feel");
 
-//		try {
-//			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-//		} catch (Exception e) {
-//			System.out.println("Fail to load and set look and feel.");
-//		}
+			try {
+				UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+			} catch (Exception e) {
+				LOGGER.error("Fail to load and set System Look and Feel");
+			}
+		}
 
 		setLayout(new BorderLayout());
 
@@ -86,10 +89,6 @@ public class MainFrame extends JFrame {
 		setResizable(Boolean.FALSE);
 		setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 		setVisible(Boolean.TRUE);
-
-//		this.loginPanel.addLoginListener(loginEvent -> {
-//			((CardLayout)overlaidPanel.getLayout()).show(overlaidPanel, this.prescriptionPanel.getName());
-//		});
 
 		this.loginPanel.addLoginListener(new LoginListener() {
 			
@@ -133,9 +132,7 @@ public class MainFrame extends JFrame {
 		JMenuBar menuBar = new JMenuBar();
 		menuBar.add(configMenu);
 
-		addCertItem.addActionListener(event -> {
-			configDialog.setVisible(Boolean.TRUE);
-		});
+		addCertItem.addActionListener(event -> configDialog.setVisible(Boolean.TRUE));
 
 		return menuBar;
 	}

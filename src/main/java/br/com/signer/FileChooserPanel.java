@@ -9,6 +9,7 @@ import java.security.KeyStore;
 import java.security.cert.X509Certificate;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.swing.DefaultListSelectionModel;
 import javax.swing.JButton;
@@ -29,6 +30,7 @@ import br.com.signer.listener.FileChooserListener;
 import br.com.signer.listener.event.CertAddedEvent;
 import br.com.signer.listener.event.CertRemovedEvent;
 import br.com.signer.listener.event.CertSelectedEvent;
+import br.com.signer.model.CertificateFileModel;
 
 public class FileChooserPanel extends JPanel {
 
@@ -42,12 +44,12 @@ public class FileChooserPanel extends JPanel {
 
 	private FileChooserListener fileChooserListener;
 	
-	public FileChooserPanel(CertTypeEnum certType, String[] tableColumnsName, List<String> items, String fileNameExtensionDescription, String[] fileNamesExtensions) {
+	public FileChooserPanel(CertTypeEnum certType, String[] tableColumnsName, List<CertificateFileModel> items, String fileNameExtensionDescription, String[] fileNamesExtensions) {
 		super();
 		
 		setLayout(new GridBagLayout());		
 		
-		this.table = new JTable(new CertTableModel(tableColumnsName, items));
+		this.table = new JTable(new CertTableModel(tableColumnsName, items.stream().map(CertificateFileModel::getFilePath).collect(Collectors.toList())));
 		this.table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		
 		this.addButton = new JButton("Adicionar");
