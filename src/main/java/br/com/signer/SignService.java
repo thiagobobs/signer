@@ -1,5 +1,6 @@
 package br.com.signer;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.security.Principal;
@@ -14,10 +15,18 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.imageio.ImageIO;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.client.j2se.MatrixToImageWriter;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.qrcode.QRCodeWriter;
+import com.itextpdf.io.image.ImageData;
+import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.kernel.colors.ColorConstants;
 import com.itextpdf.kernel.geom.Rectangle;
 import com.itextpdf.kernel.pdf.PdfDocument;
@@ -27,7 +36,14 @@ import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
 import com.itextpdf.kernel.pdf.extgstate.PdfExtGState;
 import com.itextpdf.kernel.pdf.xobject.PdfFormXObject;
 import com.itextpdf.layout.Canvas;
+import com.itextpdf.layout.borders.Border;
+import com.itextpdf.layout.element.Cell;
+import com.itextpdf.layout.element.Image;
 import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.element.Table;
+import com.itextpdf.layout.properties.TextAlignment;
+import com.itextpdf.layout.properties.UnitValue;
+import com.itextpdf.layout.properties.VerticalAlignment;
 import com.itextpdf.signatures.BouncyCastleDigest;
 import com.itextpdf.signatures.DigestAlgorithms;
 import com.itextpdf.signatures.IExternalDigest;
@@ -61,7 +77,7 @@ public class SignService {
 				PdfDocument pdfDocument = signer.getDocument();
 
 				// Create the signature appearance
-				Rectangle rect = new Rectangle(30, 80, 530, 35);
+				Rectangle rect = new Rectangle(30, 80, 530, 100);
 				PdfSignatureAppearance appearance = signer.getSignatureAppearance();
 				appearance.setPageRect(rect).setPageNumber(1);
 
@@ -83,6 +99,17 @@ public class SignService {
 
 				// Set the signature information on layer 2
 				PdfFormXObject n2 = appearance.getLayer2();
+				
+				float [] columnWidths = {20, 80};
+				Table table = new Table(UnitValue.createPercentArray(columnWidths));
+				
+				ImageData data = ImageDataFactory.create(this.generateQRCode(precription.getFileURL(Boolean.FALSE)));
+				Image img = new Image(data);
+				Cell cell1 = new Cell();
+				cell1.setBorder(Border.NO_BORDER);
+				cell1.add(img.setAutoScale(true));
+				table.addCell(cell1);
+				
 				Paragraph p = new Paragraph(
 						"Receituário assinado digitalmente por " + this.getCommonName((X509Certificate) chain[0]) + " em "
 								+ new SimpleDateFormat("dd/MM/yyyy").format(Calendar.getInstance().getTime()));
@@ -90,9 +117,16 @@ public class SignService {
 				p.setMargin(10);
 				p.setFontColor(ColorConstants.BLACK);
 				p.setFontSize(10);
+				
+				Cell cell2 = new Cell();
+				cell2.setBorder(Border.NO_BORDER);
+				cell2.setTextAlignment(TextAlignment.JUSTIFIED);
+				cell2.setVerticalAlignment(VerticalAlignment.MIDDLE);
+				cell2.add(p);
+				table.addCell(cell2);
 
 				Canvas canvas_n2 = new Canvas(n2, pdfDocument);
-				canvas_n2.add(p);
+				canvas_n2.add(table);
 				canvas_n2.close();
 
 				IExternalDigest digest = new BouncyCastleDigest();
@@ -125,10 +159,31 @@ public class SignService {
 			if (end > 0) {
 				name = tmpName.substring(0, end);
 			} else {
-				name = tmpName;
+				end = tmpName.indexOf(",");
+				if (end > 0) {
+					name = tmpName.substring(0, end);
+				} else {
+					name = tmpName;
+				}
 			}
 		}
 		return name;
+	}
+
+	private byte[] generateQRCode(String barcodeText) {
+		byte[] result = null;
+
+		try {
+		    QRCodeWriter barcodeWriter = new QRCodeWriter();
+		    BitMatrix bitMatrix = barcodeWriter.encode(barcodeText, BarcodeFormat.QR_CODE, 200, 200);
+		    
+		    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		    ImageIO.write(MatrixToImageWriter.toBufferedImage(bitMatrix), "jpg", baos);
+		    result = baos.toByteArray();
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+		return result;
 	}
 
 }
