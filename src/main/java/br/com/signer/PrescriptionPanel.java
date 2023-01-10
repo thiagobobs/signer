@@ -22,9 +22,11 @@ import javax.swing.SwingWorker;
 import javax.swing.border.Border;
 import javax.swing.border.EtchedBorder;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import br.com.signer.exception.SignatureCancelException;
 import br.com.signer.model.CertificateFileModel;
 import br.com.signer.model.CredentialModel;
 import br.com.signer.model.PrescriptionModel;
@@ -141,11 +143,14 @@ public class PrescriptionPanel extends JPanel {
 					progressDialog.setVisible(Boolean.FALSE);
 					JOptionPane.showMessageDialog(null, "Operação realizada com sucesso", null, JOptionPane.INFORMATION_MESSAGE);
 				} catch (Exception ex) {
-					LOGGER.error("Process of sign documents has fail", ex);
+					if (ExceptionUtils.getRootCause(ex) instanceof SignatureCancelException) {
+						progressDialog.setVisible(Boolean.FALSE);
+					} else {
+						LOGGER.error("Process of sign documents has fail", ex);
 
-					progressDialog.setVisible(Boolean.FALSE);
-					JOptionPane.showMessageDialog(null, "Processo de assinatura falhou. Verifique os logs da aplicação para maiores detalhes.", null, JOptionPane.ERROR_MESSAGE);
-					
+						progressDialog.setVisible(Boolean.FALSE);
+						JOptionPane.showMessageDialog(null, "Processo de assinatura falhou. Verifique os logs da aplicação para maiores detalhes.", null, JOptionPane.ERROR_MESSAGE);
+					}
 					return;
 				}
 

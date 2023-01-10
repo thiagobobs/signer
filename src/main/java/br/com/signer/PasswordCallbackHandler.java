@@ -8,6 +8,9 @@ import javax.security.auth.callback.PasswordCallback;
 import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.swing.JOptionPane;
 import javax.swing.JPasswordField;
+
+import br.com.signer.exception.SignatureCancelException;
+
 import javax.swing.JLabel;
 
 public class PasswordCallbackHandler implements CallbackHandler {
@@ -25,7 +28,7 @@ public class PasswordCallbackHandler implements CallbackHandler {
 				if (returnOption == JOptionPane.OK_OPTION) {
 					passwordCallback.setPassword(this.passwordField.getPassword());
 				} else {
-					
+					throw new SignatureCancelException();
 				}
 				
 			}
