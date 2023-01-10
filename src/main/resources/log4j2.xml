@@ -6,7 +6,7 @@
 				<Pattern>%date{dd/MM/yyyy HH:mm:ss} [%threadName] %-5level %logger - %message%n%exception</Pattern>
 			</PatternLayout>
 		</Console>
-		<RollingFile name="RollingFileAppender" fileName="${sys:user.home}/.infoDental/app.log" filePattern="${sys:user.home}/.infoDental/app-%d{yyyy-MM-dd}.log.gz">
+		<RollingFile name="RollingFileAppender" fileName="${sys:user.home}/InfoDental/app.log" filePattern="${sys:user.home}/.infoDental/app-%d{yyyy-MM-dd}.log.gz">
 			<PatternLayout>
 				<Pattern>%date{dd/MM/yyyy HH:mm:ss} [%threadName] %-5level %logger - %message%n%exception</Pattern>
 			</PatternLayout>

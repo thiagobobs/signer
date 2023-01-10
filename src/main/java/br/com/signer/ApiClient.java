@@ -31,7 +31,7 @@ public class ApiClient {
 
 	private static final ObjectMapper MAPPER = new ObjectMapper();
 	private static final String SERVICE_URL = "http://212.47.238.224/infoservices/infocert/api.php";
-	private static final String DOWNLOADED_FILES_DIRECTORY = System.getProperty("user.home") + File.separator + ".infoDental";
+	private static final String DOWNLOADED_FILES_DIRECTORY = System.getProperty("user.home") + File.separator + "InfoDental";
 
 	private List<PacienteDto> autenticate(CredentialModel credential) throws IOException {
 		LOGGER.info("Authenticate user {} in {} instance", credential.getDocument(), credential.getInstance());

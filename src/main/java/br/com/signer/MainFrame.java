@@ -38,7 +38,7 @@ public class MainFrame extends JFrame {
 	public MainFrame() {
 		super("Info Dental");
 
-		if (!SystemUtils.IS_OS_LINUX) {
+		if (SystemUtils.IS_OS_MAC_OSX) {
 			try {
 				setIconImage(ImageIO.read(this.getClass().getResourceAsStream("/icons/logo-32.png")));
 				Taskbar.getTaskbar().setIconImage(getIconImage());

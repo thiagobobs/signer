@@ -141,10 +141,10 @@ public class PrescriptionPanel extends JPanel {
 					progressDialog.setVisible(Boolean.FALSE);
 					JOptionPane.showMessageDialog(null, "Operação realizada com sucesso", null, JOptionPane.INFORMATION_MESSAGE);
 				} catch (Exception ex) {
-					LOGGER.info("Process of sign documents has fail. Reason: {}", ex.getCause().getLocalizedMessage());
+					LOGGER.error("Process of sign documents has fail", ex);
 
 					progressDialog.setVisible(Boolean.FALSE);
-					JOptionPane.showMessageDialog(null, ex.getCause().getLocalizedMessage(), null, JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(null, "Processo de assinatura falhou. Verifique os logs da aplicação para maiores detalhes.", null, JOptionPane.ERROR_MESSAGE);
 					
 					return;
 				}

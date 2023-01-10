@@ -95,7 +95,7 @@ public class FileChooserPanel extends JPanel {
 					this.fileChooserListener.certSelected(new CertSelectedEvent(this.formatCertInfo((X509Certificate) keyStore.getCertificate(aliases.nextElement()))));
 				} catch (Exception ex) {
 					this.fileChooserListener.certSelected(new CertSelectedEvent(null));
-					JOptionPane.showMessageDialog(null, ex.getLocalizedMessage(), null, JOptionPane. ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(null, "Falha ao carregar o driver selecionado. Verifique os logs da aplicação para maiores detalhes.", null, JOptionPane. ERROR_MESSAGE);
 					LOGGER.error(StringUtils.EMPTY, ex);
 				}
 			}
